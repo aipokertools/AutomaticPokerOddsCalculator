@@ -77,7 +77,9 @@ from rich import box
 # ═══════════════════════════════════════════════════════════════════════════════
 
 API_URL = "https://aipokertools.com/api/v1/detect-cards"
+IMAGE_QUALITY_URL = "https://aipokertools.com/api/v1/image-quality"
 LICENSE_KEY_FILE = "calculator_license_key.txt"
+DEFAULT_IMAGE_QUALITY = 100
 
 
 def get_license_key() -> str:
@@ -116,6 +118,21 @@ def get_license_key() -> str:
         print(f"\nWarning: Could not save license key to file: {e}")
 
     return key
+
+
+def get_image_quality() -> int:
+    """Fetch ideal JPEG quality from API, or return default on failure."""
+    try:
+        response = requests.get(IMAGE_QUALITY_URL, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            quality = data.get("quality", DEFAULT_IMAGE_QUALITY)
+            if isinstance(quality, int) and 1 <= quality <= 100:
+                return quality
+    except Exception:
+        pass
+    return DEFAULT_IMAGE_QUALITY
+
 
 # Card display symbols
 SUIT_SYMBOLS = {
@@ -449,12 +466,12 @@ class PokerAnalysis:
         )
 
 
-def analyze_screenshot(image: Image.Image, opponents: int, license_key: str) -> PokerAnalysis:
+def analyze_screenshot(image: Image.Image, opponents: int, license_key: str, image_quality: int) -> PokerAnalysis:
     """Send screenshot to API and return analysis results."""
     try:
-        # Convert image to bytes
+        # Convert image to JPEG
         img_buffer = io.BytesIO()
-        image.save(img_buffer, format="PNG")
+        image.save(img_buffer, format="JPEG", quality=image_quality)
         img_buffer.seek(0)
 
         # Make API request
@@ -463,7 +480,7 @@ def analyze_screenshot(image: Image.Image, opponents: int, license_key: str) -> 
             headers={
                 "X-License-Key": license_key,
             },
-            files={"image": ("screenshot.png", img_buffer, "image/png")},
+            files={"image": ("screenshot.jpg", img_buffer, "image/jpeg")},
             data={"opponents": str(opponents)},
             timeout=30
         )
@@ -835,6 +852,9 @@ def main():
     # Get license key (from file or prompt user)
     license_key = get_license_key()
 
+    # Get ideal image quality from API
+    image_quality = get_image_quality()
+
     console = Console()
 
     # Select window
@@ -870,7 +890,7 @@ def main():
                     last_analysis = PokerAnalysis.from_error("Failed to capture window")
                 else:
                     # Send to API
-                    last_analysis = analyze_screenshot(screenshot, opponents, license_key)
+                    last_analysis = analyze_screenshot(screenshot, opponents, license_key, image_quality)
 
                 # Update display
                 display = build_display(last_analysis, window.title, opponents, iteration)
