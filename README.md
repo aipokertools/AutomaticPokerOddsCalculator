@@ -56,8 +56,15 @@ source .venv/bin/activate  # Linux/macOS
 ```
 
 ### Step 3: Install Dependencies
+
+### macOS
 ```bash
-pip install mss Pillow questionary requests rich
+pip install -r requirements_macos.txt
+```
+
+### Linux
+```bash
+pip install -r requirements_linux.txt
 ```
 
 **Platform-specific extras:**
@@ -74,13 +81,12 @@ python calculator.py --help
 
 You should see:
 ```
-usage: calculator.py [-h] [--opponents OPPONENTS]
+usage: calculator.py [-h]
 
 Poker Probability Calculator
 
 options:
   -h, --help            show this help message and exit
-  --opponents OPPONENTS Number of opponents (will prompt if not provided)
 ```
 
 ---
@@ -96,14 +102,8 @@ python calculator.py
 This will:
 1. List all open windows
 2. Let you select your poker client
-3. Ask how many opponents you're playing against
-4. Start the live probability display
+3. Start the live probability display
 
-### With Command-Line Options
-```bash
-# Pre-set 3 opponents (skip the prompt)
-python calculator.py --opponents 3
-```
 
 ### Stopping the Calculator
 Press **Ctrl+C** to exit at any time.
